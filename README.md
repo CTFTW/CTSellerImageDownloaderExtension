@@ -1,5 +1,6 @@
 # CTSellerImageDownloaderExtension
 A Chrome extension that downloads cover images from CTBids Seller Dashboard using the Lot title for the filename.
+
 Jason Norris CTFTW 7/27/2025
 
 This extension will download all the cover images for a specified CTBids auction from the Seller Dashboard, using the Lot title as the filename. This makes it easy to not only identify the image to the lot, but also provide a meaningful description when uploading images to [EstateSales.net/org/com](http://EstateSales.net/org/com), et al. 
