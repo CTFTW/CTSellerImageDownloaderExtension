@@ -25,6 +25,11 @@
         }
         .form-group {
             text-align: left;
+            margin-bottom: 12px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
             margin-bottom: 15px;
         }
         label {
@@ -32,6 +37,11 @@
             font-size: 14px;
             font-weight: 500;
             margin-bottom: 5px;
+        }
+        label[for="skipPendingCheckbox"] {
+            margin-bottom: 0;
+            margin-left: 6px;
+            font-weight: normal;
         }
         input[type="text"] {
             width: 100%;
@@ -50,7 +60,7 @@
             background-color: #007bff;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             outline: none;
         }
         button:hover:not(:disabled) {
@@ -67,33 +77,27 @@
             text-align: center;
         }
         .progress-container {
-            display: none; /* Hidden by default */
+            display: none;
             margin-top: 15px;
         }
         progress {
             width: 100%;
             height: 8px;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-        progress::-webkit-progress-bar {
-            background-color: #eee;
-            border-radius: 4px;
-        }
-        progress::-webkit-progress-value {
-            background-color: #007bff;
-            border-radius: 4px;
-            transition: width 0.1s linear;
         }
     </style>
 </head>
 <body>
-	<h2>CT Seller Image Helper</h2>
+	<h2>CT Seller Image Helper</h2><br>
     <a id="closeBtn" class="close-btn" title="Close">&times;</a>
 
     <div class="form-group">
-        <label for="folderNameInput">Auction folder:</label>
+        <label for="folderNameInput">Auction Name (Subfolder):</label>
         <input type="text" id="folderNameInput" disabled/>
+    </div>
+
+    <div class="checkbox-group">
+        <input type="checkbox" id="skipPendingCheckbox" checked>
+        <label for="skipPendingCheckbox">Skip Pending</label>
     </div>
 
     <button id="downloadBtn" disabled>Download Images</button>

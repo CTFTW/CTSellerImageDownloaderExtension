@@ -1,20 +1,15 @@
 (() => {
-  /**
-   * Sanitizes a string for use as a valid filename.
-   */
   function sanitizeFilename(name) {
     if (!name) return 'untitled';
     const sanitized = name
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Remove diacritical marks
-      .replace(/[\\/:*?"<>|#]/g, ' ')  // Replace invalid characters
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\\/:*?"<>|#]/g, ' ')
       .trim();
     return sanitized || 'untitled';
   }
 
-  // Find the auction name from the specified span element
   const auctionNameElement = document.querySelector('span.mx-2');
-  // Use innerText to safely get the visible text and trim any extra whitespace
   const auctionName = auctionNameElement ? auctionNameElement.innerText.trim() : 'Default-Auction';
 
   const itemsToDownload = [];
@@ -23,23 +18,28 @@
   itemNodes.forEach(node => {
     const imgElement = node.querySelector('img.location-image');
     const titleElement = node.querySelector('.title.h5.text-bold');
+    
+    // Find the status element for the current item
+    const statusElement = node.querySelector('.d-flex.align-items-center.justify-content-between.header > div > div');
 
     if (imgElement && titleElement) {
       const imageUrl = imgElement.src;
       const title = titleElement.innerText;
       
+      // Check if the item's status is "Pending"
+      const isPending = statusElement ? statusElement.innerText.trim() === 'Pending' : false;
+
       const urlParts = new URL(imageUrl);
       const extension = urlParts.pathname.substring(urlParts.pathname.lastIndexOf('.'));
-      
       const filename = sanitizeFilename(title) + extension;
       
       itemsToDownload.push({
         url: imageUrl,
         filename: filename,
+        isPending: isPending, // Add the status to the item's data
       });
     }
   });
 
-  // Return a single object containing both the auction name and the image data
   return { auctionName, imageData: itemsToDownload };
 })();
