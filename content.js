@@ -1,8 +1,20 @@
-(() => {
+(async () => {
     function sanitizeFilename(name) {
         if (!name) return 'untitled';
         return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\\/:*?"<>|#]/g, ' ').trim() || 'untitled';
     }
+
+    async function clickMoreButton() {
+        const moreButton = document.querySelector('div.browse-all.clickable');
+        if (moreButton && moreButton.innerText.trim() === 'More') {
+            moreButton.scrollIntoView();
+            moreButton.click();
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for content to load
+            await clickMoreButton();
+        }
+    }
+
+    await clickMoreButton();
 
     const auctionNameElement = document.querySelector('span.mx-2');
     const auctionName = auctionNameElement ? auctionNameElement.innerText.trim() : 'Default-Auction';
@@ -19,7 +31,6 @@
             const isPending = statusElement ? statusElement.innerText.trim() === 'Pending' : false;
             const thumbnailFilename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
             
-            // Extract the part of the filename before the underscore as the Lot ID
             const lotId = thumbnailFilename.split('_')[0];
 
             lotsData.push({

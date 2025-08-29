@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeBtn = document.getElementById('closeBtn');
     const progressContainer = document.getElementById('progressContainer');
     const progressBar = document.getElementById('progressBar');
-
+    const ctControls = document.getElementById('showControls');
+    
     // --- State Variables ---
     let lotsDataCache = [];
     const downloadIds = new Set();
@@ -194,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initializePopup() {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab.url || !tab.url.includes('seller.ctbids.com/sales/dashboard/')) {
-            resetUiToReadyState('Not on a compatible CTBids page.');
+            resetUiToReadyState('Not a Seller.CTBids Dashboard page.');
             downloadBtn.disabled = true;
             return;
         }
@@ -206,12 +207,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 folderNameInput.value = pageData.auctionName || '';
                 lotsDataCache = pageData.lotsData;
                 resetUiToReadyState(`Ready. Found ${lotsDataCache.length} lots.`);
+                ctControls.style.display = 'block';
             } else {
                 throw new Error("No data received from page.");
             }
         } catch (error) {
             console.error('Initialization failed:', error);
-            resetUiToReadyState('Failed to load data from the page.');
+            resetUiToReadyState(`ERROR: ${error.message}`);
+
         }
     }
 

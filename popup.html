@@ -1,66 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>CTBids Downloader</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; width: 300px; padding: 15px; position: relative; }
-        .close-btn { position: absolute; top: 5px; right: 10px; font-size: 22px; color: #888; text-decoration: none; cursor: pointer; line-height: 1; }
-        .close-btn:hover { color: #333; }
-        .form-group { text-align: left; margin-bottom: 12px; }
-        .checkbox-group { display: flex; align-items: center; margin-bottom: 8px; }
-        label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 5px; }
-        label.inline { margin-bottom: 0; margin-left: 6px; font-weight: normal; cursor: pointer; }
-        input[type="checkbox"] { cursor: pointer; }
-        input[type="text"] { width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        hr { border: none; border-top: 1px solid #eee; margin: 15px 0; }
-        .button-container { display: flex; gap: 10px; }
-        button { width: 100%; padding: 10px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; outline: none; }
-        button#downloadBtn { background-color: #007bff; color: white; }
-        button#downloadBtn:hover:not(:disabled) { background-color: #0056b3; }
-        button#abortBtn { background-color: #dc3545; color: white; display: none; }
-        button#abortBtn:hover:not(:disabled) { background-color: #c82333; }
-        button:disabled { background-color: #aaa; color: #eee; cursor: not-allowed; }
-        p#status { font-size: 12px; margin-top: 15px; min-height: 14px; text-align: center; }
-        .progress-container { display: none; margin-top: 15px; }
-        progress { width: 100%; height: 8px; }
-    </style>
+	<meta charset="UTF-8">
+	<title>CTBids Image Downloader</title>
+	<style>
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+			width: 300px;
+			padding: 15px;
+			position: relative;
+		}
+
+		.jnMugShot {
+			top: 5px;
+			left: 10px;
+		}
+
+		.titleText {
+			top: 0px;
+			left: 70px;
+			color: #888;
+			text-decoration: none;
+			cursor: pointer;
+			line-height: 1;
+		}
+
+		.close-btn {
+			position: absolute;
+			z-index: 1;
+			top: 5px;
+			right: 10px;
+			font-size: 22px;
+			color: #888;
+			text-decoration: none;
+			cursor: pointer;
+			line-height: 1;
+		}
+
+		.close-btn:hover {
+			color: #333;
+		}
+
+		.form-group {
+			text-align: left;
+			margin-bottom: 12px;
+		}
+
+		.ctControls {
+			display: none;
+			position: relative;
+			margin-top: 150px;
+		}
+
+		.checkbox-group {
+			display: flex;
+			align-items: center;
+			margin-bottom: 8px;
+		}
+
+		label {
+			display: block;
+			font-size: 14px;
+			font-weight: 500;
+			margin-bottom: 5px;
+		}
+
+		label.inline {
+			margin-bottom: 0;
+			margin-left: 6px;
+			font-weight: normal;
+			cursor: pointer;
+		}
+
+		input[type="checkbox"] {
+			cursor: pointer;
+		}
+
+		input[type="text"] {
+			width: 100%;
+			padding: 8px;
+			font-size: 14px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			box-sizing: border-box;
+		}
+
+		hr {
+			border: none;
+			border-top: 1px solid #921a1a;
+			margin: 4px 0;
+		}
+
+		.button-container {
+			display: flex;
+			gap: 10px;
+		}
+
+		button {
+			width: 100%;
+			padding: 10px;
+			font-size: 14px;
+			font-weight: bold;
+			cursor: pointer;
+			border: none;
+			border-radius: 5px;
+			outline: none;
+		}
+
+		button#downloadBtn {
+			background-color: #007bff;
+			color: white;
+		}
+
+		button#downloadBtn:hover:not(:disabled) {
+			background-color: #0056b3;
+		}
+
+		button#abortBtn {
+			background-color: #dc3545;
+			color: white;
+			display: none;
+		}
+
+		button#abortBtn:hover:not(:disabled) {
+			background-color: #c82333;
+		}
+
+		button:disabled {
+			background-color: #aaa;
+			color: #eee;
+			cursor: not-allowed;
+		}
+
+		p#status {
+			font-size: 12px;
+			margin-top: 15px;
+			min-height: 14px;
+			text-align: center;
+		}
+
+		.progress-container {
+			display: none;
+			margin-top: 15px;
+		}
+
+		progress {
+			width: 100%;
+			height: 8px;
+		}
+
+		.tooltip {
+			position: relative;
+			display: inline-block;
+			border-bottom: 0px dotted black;
+		}
+
+		.tooltip .tooltiptext {
+			visibility: hidden;
+			width: 1fr;
+			background-color: black;
+			color: #fff;
+			text-align: center;
+			border-radius: 6px;
+			padding: 5px;
+			position: absolute;
+			z-index: 1;
+			bottom: 125%;
+			left: 50%;
+			margin-left: -100px;
+			opacity: 0;
+			transition: opacity 1s;
+		}
+
+		.tooltip .tooltiptext::after {
+			content: "";
+			position: absolute;
+			top: 100%;
+			left: 50%;
+			margin-left: -5px;
+			border-width: 5px;
+			border-style: solid;
+			border-color: #555 transparent transparent transparent;
+		}
+
+		.tooltip:hover .tooltiptext {
+			visibility: visible;
+			opacity: 1;
+		}
+
+		.grid-container {
+			display: grid;
+			grid-template-columns: auto 1fr;
+			grid-template-rows: 64px;
+			align-items: center;
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+		}
+
+		.grid-item {
+			padding: 4px;
+			font-size: 14px;
+			text-align: left;
+			border: 0px solid black;
+		}
+	</style>
 </head>
+
 <body>
-    <h2>CT Seller Image Helper v.042</h2><br>
-    <a id="closeBtn" class="close-btn" title="Close">&times;</a>
+	<a id="closeBtn" class="close-btn" title="Close">&times;</a>
 
-    <div class="form-group">
-        <label for="folderNameInput">Auction Name (Subfolder):</label>
-        <input type="text" id="folderNameInput" disabled/>
-    </div>
+	<div class="grid-container">
+		<div class="grid-item">&nbsp;
+			<img style="vertical-align: middle;" src="icon.png" width="64" height="64">
+		</div>
 
-    <div class="checkbox-group">
-        <input type="checkbox" id="skipPendingCheckbox" checked>
-        <label for="skipPendingCheckbox" class="inline">Skip "Pending" items</label>
-    </div>
-    <div class="checkbox-group">
-        <input type="checkbox" id="allImagesCheckbox">
-        <label for="allImagesCheckbox" class="inline">Download all lot images (slower)</label>
-    </div>
-    <div class="checkbox-group">
-        <input type="checkbox" id="subfolderCheckbox">
-        <label for="subfolderCheckbox" class="inline">Create subfolder for each lot</label>
-    </div>
+		<div class="grid-item">
+			<h2 style="vertical-align: top;">CTBids Seller<br>Image Helper</h2>
+		</div>
 
-    <hr>
+		<div class="grid-item" style="grid-column: span 2; text-align: center;">
+			<hr>
 
-    <div class="button-container">
-        <button id="downloadBtn" disabled>Download Images</button>
-        <button id="abortBtn">Abort</button>
-    </div>
-    
-    <div id="progressContainer" class="progress-container">
-        <progress id="progressBar" max="100" value="0"></progress>
-    </div>
+			<div class="tooltip"><a target="_blank" href="">Instructions</a>
+				<span class="tooltiptext">Open help document in another tab.</span>
+			</div>
+			&nbsp; &nbsp;
+			<div class="tooltip"><a target="_blank" href="https://Buymeacoffee.com/jnco" alt="Buymeacoffee.com/jnco">Buy
+					me a Coffee</a><span class="tooltiptext">Support my work & buy me a coffee!</span>
+			</div>
+			<hr>
+			<p id="status">Loading...</p>
+			<div id="progressContainer" class="progress-container">
+				<progress id="progressBar" max="100" value="0"></progress>
+			</div>
+		</div>
 
-    <p id="status">Loading...</p>
+	</div>
 
-    <script src="popup.js"></script>
+
+	<div class="ctControls" id="showControls">
+		<div class="form-group">
+			<label for="folderNameInput">Auction Name (Subfolder):</label>
+			<input type="text" id="folderNameInput" disabled />
+		</div>
+
+		<div class="checkbox-group">
+			<input type="checkbox" id="skipPendingCheckbox" checked>
+			<label for="skipPendingCheckbox" class="inline">Skip "Pending" items</label>
+		</div>
+		<div class="checkbox-group">
+			<input type="checkbox" id="allImagesCheckbox">
+			<label for="allImagesCheckbox" class="inline">Download all lot images (slower)</label>
+		</div>
+		<div class="checkbox-group">
+			<input type="checkbox" id="subfolderCheckbox">
+			<label for="subfolderCheckbox" class="inline">Create subfolder for each lot</label>
+		</div>
+
+		<hr>
+
+		<div class="button-container">
+			<button id="downloadBtn" disabled>Download Images</button>
+			<button id="abortBtn">Abort</button>
+		</div>
+	</div>
+
+	<script src="popup.js"></script>
 </body>
+
 </html>
