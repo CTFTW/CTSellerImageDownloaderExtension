@@ -135,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         downloadList.forEach(item => {
             chrome.downloads.download({
+                saveAs: false,
                 url: item.url,
                 filename: item.filename,
             }, (downloadId) => {
