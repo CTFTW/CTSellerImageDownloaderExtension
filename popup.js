@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const skipPendingCheckbox = document.getElementById('skipPendingCheckbox');
     const allImagesCheckbox = document.getElementById('allImagesCheckbox');
     const subfolderCheckbox = document.getElementById('subfolderCheckbox');
+    const convertFormatSelect = document.getElementById('convertFormatSelect');
     const closeBtn = document.getElementById('closeBtn');
     const progressContainer = document.getElementById('progressContainer');
     const progressBar = document.getElementById('progressBar');
@@ -38,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isAborted = false;
         setUiToInProgressState();
 
+        const convertFormat = convertFormatSelect.value;
         const baseFolderName = sanitizeFolderName(folderNameInput.value);
         let lotsToProcess = skipPendingCheckbox.checked ? lotsDataCache.filter(lot => !lot.isPending) : lotsDataCache;
 
@@ -52,11 +54,17 @@ document.addEventListener('DOMContentLoaded', () => {
             finalDownloadList = await discoverAllImages(lotsToProcess, baseFolderName);
         } else {
             finalDownloadList = lotsToProcess.map(lot => {
-                const extension = lot.thumbnailUrl.split('.').pop() || 'jpeg';
-                const filename = `${lot.title}.${extension}`;
+                const originalExtension = lot.thumbnailUrl.split('.').pop() || 'jpeg';
+                const convertFormat = convertFormatSelect.value;
+                let newExtension = originalExtension;
+                if (convertFormat !== 'none' && originalExtension.toLowerCase() === 'webp') {
+                    newExtension = convertFormat;
+                }
+                const filename = `${lot.title}.${newExtension}`;
                 return {
                     url: lot.thumbnailUrl,
-                    filename: subfolderCheckbox.checked ? `${baseFolderName}/${lot.title}/${filename}` : `${baseFolderName}/${filename}`
+                    filename: subfolderCheckbox.checked ? `${baseFolderName}/${lot.title}/${filename}` : `${baseFolderName}/${filename}`,
+                    convert: convertFormat !== 'none' && originalExtension.toLowerCase() === 'webp'
                 };
             });
         }
@@ -71,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        startDownloadProcess(finalDownloadList);
+        startDownloadProcess(finalDownloadList, convertFormat);
     }
     
     async function discoverAllImages(lots, baseFolderName) {
@@ -105,21 +113,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const lotImages = fileList.filter(file => file.startsWith(lot.lotId + '_') && /\.(jpe?g|png|gif|webp)$/i.test(file));
             
             const imagesToProcess = lotImages.length > 0 ? lotImages : [lot.thumbnailUrl.substring(lot.thumbnailUrl.lastIndexOf('/') + 1)];
+            const convertFormat = convertFormatSelect.value;
 
             imagesToProcess.forEach((imgFilename, index) => {
                 const suffix = String(index + 1).padStart(3, '0');
-                const extension = imgFilename.split('.').pop();
-                const filename = `${lot.title}-${suffix}.${extension}`;
+                const originalExtension = imgFilename.split('.').pop();
+                let newExtension = originalExtension;
+                if (convertFormat !== 'none' && originalExtension.toLowerCase() === 'webp') {
+                    newExtension = convertFormat;
+                }
+                const filename = `${lot.title}-${suffix}.${newExtension}`;
                 allImages.push({
                     url: directoryUrl + imgFilename,
-                    filename: subfolderCheckbox.checked ? `${baseFolderName}/${lot.title}/${filename}` : `${baseFolderName}/${filename}`
+                    filename: subfolderCheckbox.checked ? `${baseFolderName}/${lot.title}/${filename}` : `${baseFolderName}/${filename}`,
+                    convert: convertFormat !== 'none' && originalExtension.toLowerCase() === 'webp'
                 });
             });
         }
         return allImages;
     }
 
-    function startDownloadProcess(downloadList) {
+    function startDownloadProcess(downloadList, convertFormat) {
         if (isAborted) {
             resetUiToReadyState('Operation aborted before downloads started.');
             return;
@@ -134,19 +148,36 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.downloads.onChanged.addListener(handleDownloadChange);
         
         downloadList.forEach(item => {
-            chrome.downloads.download({
-                saveAs: false,
-                url: item.url,
-                filename: item.filename,
-            }, (downloadId) => {
-                if (chrome.runtime.lastError) {
-                    console.error(`Download failed: ${chrome.runtime.lastError.message}`);
-                    updateProgress(totalCount, true);
-                } else if (downloadId) {
-                    downloadIds.add(downloadId);
-                }
-            });
+            if (item.convert) {
+                chrome.runtime.sendMessage({ action: 'convertImage', url: item.url, format: convertFormat }, response => {
+                    if (response.success) {
+                        chrome.downloads.download({
+                            saveAs: false,
+                            url: response.dataUrl,
+                            filename: item.filename,
+                        }, downloadId => handleDownloadCreation(downloadId, totalCount));
+                    } else {
+                        console.error('Conversion failed:', response.error);
+                        updateProgress(totalCount, true);
+                    }
+                });
+            } else {
+                chrome.downloads.download({
+                    saveAs: false,
+                    url: item.url,
+                    filename: item.filename,
+                }, downloadId => handleDownloadCreation(downloadId, totalCount));
+            }
         });
+    }
+
+    function handleDownloadCreation(downloadId, totalCount) {
+        if (chrome.runtime.lastError) {
+            console.error(`Download failed: ${chrome.runtime.lastError.message}`);
+            updateProgress(totalCount, true);
+        } else if (downloadId) {
+            downloadIds.add(downloadId);
+        }
     }
 
     function handleDownloadChange(delta) {
@@ -180,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadBtn.disabled = lotsDataCache.length === 0;
         folderNameInput.disabled = false;
         cleanupListener();
+        chrome.runtime.sendMessage({ action: 'closeOffscreenDocument' });
     }
 
     function cleanupListener() {
