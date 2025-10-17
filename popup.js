@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressContainer = document.getElementById('progressContainer');
     const progressBar = document.getElementById('progressBar');
     const ctControls = document.getElementById('showControls');
-    
+
     // --- State Variables ---
     let lotsDataCache = [];
     const downloadIds = new Set();
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             });
         }
-        
+
         if (isAborted) {
             resetUiToReadyState('Operation aborted.');
             return;
@@ -78,14 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
             resetUiToReadyState('No images found to download.');
             return;
         }
-        
+
         startDownloadProcess(finalDownloadList, convertFormat);
     }
-    
+
     async function discoverAllImages(lots, baseFolderName) {
         const directoryCache = new Map();
         const allImages = [];
-        
+
         for (const lot of lots) {
             if (isAborted) break;
 
@@ -109,9 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     continue;
                 }
             }
-            
+
             const lotImages = fileList.filter(file => file.startsWith(lot.lotId + '_') && /\.(jpe?g|png|gif|webp)$/i.test(file));
-            
+
             const imagesToProcess = lotImages.length > 0 ? lotImages : [lot.thumbnailUrl.substring(lot.thumbnailUrl.lastIndexOf('/') + 1)];
             const convertFormat = convertFormatSelect.value;
 
@@ -143,10 +143,10 @@ document.addEventListener('DOMContentLoaded', () => {
         progressBar.value = 0;
         progressBar.max = totalCount;
         progressContainer.style.display = 'block';
-        
+
         statusEl.textContent = `Downloading 0 of ${totalCount}...`;
         chrome.downloads.onChanged.addListener(handleDownloadChange);
-        
+
         downloadList.forEach(item => {
             if (item.convert) {
                 chrome.runtime.sendMessage({ action: 'convertImage', url: item.url, format: convertFormat }, response => {
@@ -187,22 +187,24 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadIds.delete(delta.id);
         }
     }
-    
+
     function updateProgress(total, isError = false) {
-        if(!isError) completedCount++;
+        if (!isError) completedCount++;
         progressBar.value = completedCount;
         statusEl.textContent = `Downloading ${completedCount} of ${total}...`;
         if (completedCount >= total) {
             resetUiToReadyState('✅ Download complete!');
         }
     }
-    
+
+
+
     function setUiToInProgressState() {
         downloadBtn.style.display = 'none';
         abortBtn.style.display = 'block';
         folderNameInput.disabled = true;
     }
-    
+
     function resetUiToReadyState(message) {
         statusEl.textContent = message;
         downloadBtn.style.display = 'block';
@@ -222,7 +224,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function sanitizeFolderName(name) {
         if (!name) return 'Untitled-Auction';
-        return name.replace(/[\\/:*?"<>|#]/g, ' ').trim() || 'Untitled-Auction';
+        //return name.replace(/[\\/:*?."<>|#]/g, '').trim() || 'Untitled-Auction';        
+        name = name.replace(/[\\/:*?."<>|#]/g, '').trim() || 'Untitled-Auction';
+        return truncateString(name, 32).trim();
+    }
+
+    function truncateString(str, maxLength) {
+        if (str.length <= maxLength) {
+            return str;
+        } else {
+            return str.slice(0, maxLength);
+        }
     }
 
     async function initializePopup() {
@@ -237,7 +249,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const results = await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
             const pageData = results[0].result;
             if (pageData && pageData.lotsData) {
-                folderNameInput.value = pageData.auctionName || '';
+                //folderNameInput.value = pageData.auctionName || '';
+                folderNameInput.value = sanitizeFolderName(pageData.auctionName) || '';
                 lotsDataCache = pageData.lotsData;
                 resetUiToReadyState(`Ready. Found ${lotsDataCache.length} lots.`);
                 ctControls.style.display = 'block';
