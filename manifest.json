@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CTBids Seller Image Helper",
-  "version": "1.2.0.0",
+  "version": "1.2.1.0",
   "description": "Downloads photos from the CTBids seller dashboard, using item titles as filenames.",
   "permissions": ["activeTab", "scripting", "downloads", "offscreen"],
   "background": {
